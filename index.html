@@ -104,7 +104,12 @@ svg { width: 100%; height: 100%; }
 /* SVG内スタイル定義 */
 .court-base { fill: #4169e1; } /* インコートの青 */
 .court-line { stroke: white; stroke-width: 3; fill: none; }
-.net-line { stroke: #eee; stroke-width: 4; stroke-dasharray: 5,5; }
+/* ネットのスタイルを変更：少し濃い色に */
+.net-line { stroke: #ccc; stroke-width: 4; stroke-dasharray: 4,4; }
+/* ネットポストのスタイル追加 */
+.net-post { fill: #333; }
+/* センターストラップのスタイル追加 */
+.center-strap { fill: white; }
 .draw-path { stroke: #ffeb3b; stroke-width: 4; fill: none; stroke-linecap: round; opacity: 0.8; }
 .arrow-line { stroke-width: 4; fill: none; opacity: 0.9; }
 .arrow-shot { stroke: #ffeb3b; marker-end: url(#arrowhead-shot); }
@@ -238,7 +243,12 @@ body.presentation-mode #svg-container { top:0; bottom:0; }
 /* SVG内スタイル（画像化用） */
 .court-base { fill: #4169e1; }
 .court-line { stroke: white; stroke-width: 3; fill: none; }
-.net-line { stroke: #eee; stroke-width: 4; stroke-dasharray: 5,5; }
+/* ネットのスタイルを変更：少し濃い色に */
+.net-line { stroke: #ccc; stroke-width: 4; stroke-dasharray: 4,4; }
+/* ネットポストのスタイル追加 */
+.net-post { fill: #333; }
+/* センターストラップのスタイル追加 */
+.center-strap { fill: white; }
 .draw-path { stroke: #ffeb3b; stroke-width: 4; fill: none; stroke-linecap: round; opacity: 0.8; }
 .arrow-line { stroke-width: 4; fill: none; opacity: 0.9; }
 .arrow-shot { stroke: #ffeb3b; marker-end: url(#arrowhead-shot); }
@@ -248,7 +258,12 @@ text { font-family: sans-serif; }
 <rect width="1340" height="610" fill="#2e8b57" /> <g id="lines">
 <rect x="107" y="45" width="1126" height="520" class="court-base" /> <rect x="107" y="45" width="1126" height="520" class="court-line" />
 
-<line x1="670" y1="25" x2="670" y2="585" class="net-line" />
+<g id="net-assembly">
+    <line x1="670" y1="25" x2="670" y2="585" class="net-line" />
+    <rect x="87" y="20" width="20" height="570" class="net-post" />
+    <rect x="1233" y="20" width="20" height="570" class="net-post" />
+    <rect x="668" y="305" width="4" height="280" class="center-strap" />
+</g>
 
 <line x1="107" y1="110" x2="1233" y2="110" class="court-line" />
 <line x1="107" y1="500" x2="1233" y2="500" class="court-line" />
@@ -290,9 +305,10 @@ text { font-family: sans-serif; }
 </div>
 <script>
 // --- データ管理設定 ---
-const KEY_BLOCKS = 'badi_plan_blocks_v3';
-const KEY_HISTORY = 'badi_plan_history_v3';
-const KEY_LIBRARY = 'badi_plan_library_v3';
+// バドミントン版と混ざらないようにKeyを変更
+const KEY_BLOCKS = 'tennis_plan_blocks_v1';
+const KEY_HISTORY = 'tennis_plan_history_v1';
+const KEY_LIBRARY = 'tennis_plan_library_v1';
 
 let blockList = [];
 let historyList = [];
@@ -444,7 +460,7 @@ const svg = document.getElementById('court-svg'); const gDraw = document.getElem
 
 function openBlockBoard(idx) {
 currentBlockIndex = idx; screenPlan.style.display = 'none'; screenBoard.style.display = 'block'; boardTitle.innerText = blockList[idx].title;
-resetBoardState(); if(blockList[idx].boardData) loadBoardData(blockList[idx].boardData); else { addPlayer(); addPlayer(); addShuttle(); }
+resetBoardState(); if(blockList[idx].boardData) loadBoardData(blockList[idx].boardData); else { addPlayer(); addPlayer(); addBall(); }
 setToolMode('move');
 }
 function closeBoard() {
@@ -459,17 +475,23 @@ else if(m === 'pen') document.getElementById('btn-mode-pen').classList.add('acti
 else if(m === 'arrow-shot') document.getElementById('btn-mode-arrow-shot').classList.add('active');
 else if(m === 'arrow-move') document.getElementById('btn-mode-arrow-move').classList.add('active');
 }
-function addPlayer() { state.objects.push({ id: 'p_'+Date.now(), type: 'player', x: 300+(state.objects.length*50), y: 400 }); renderObjects(); }
-function addShuttle() { state.objects.push({ id: 's_'+Date.now(), type: 'shuttle', x: 670, y: 300 }); renderObjects(); }
+function addPlayer() { state.objects.push({ id: 'p_'+Date.now(), type: 'player', x: 300+(state.objects.length*50), y: 550 }); renderObjects(); }
+// テニスボール追加に変更
+function addBall() { state.objects.push({ id: 'b_'+Date.now(), type: 'ball', x: 670, y: 300 }); renderObjects(); }
 function clearObjects() { if(confirm("全消去？")) { state.objects = []; renderObjects(); } }
 function clearDrawings() { state.drawings = []; renderDrawings(); }
 function renderObjects() {
 gObj.innerHTML = '';
 state.objects.forEach(obj => {
-const el = document.createElementNS("http://www.w3.org/2000/svg", obj.type === 'player' ? 'circle' : 'path');
+const el = document.createElementNS("http://www.w3.org/2000/svg", 'circle'); // どちらも円
 el.setAttribute('id', obj.id);
-if(obj.type === 'player') { el.setAttribute('cx', obj.x); el.setAttribute('cy', obj.y); el.setAttribute('r', 20); el.setAttribute('fill', '#007AFF'); el.setAttribute('stroke', 'white'); el.setAttribute('stroke-width', '2'); }
-else { const d = `M${obj.x},${obj.y-10} L${obj.x+10},${obj.y+10} L${obj.x-10},${obj.y+10} Z`; el.setAttribute('d', d); el.setAttribute('fill', 'white'); el.setAttribute('stroke', 'black'); }
+el.setAttribute('cx', obj.x); el.setAttribute('cy', obj.y);
+if(obj.type === 'player') { 
+el.setAttribute('r', 20); el.setAttribute('fill', '#007AFF'); el.setAttribute('stroke', 'white'); el.setAttribute('stroke-width', '2'); 
+} else { 
+// ボール：枠線の色を少し濃くして視認性を上げる
+el.setAttribute('r', 10); el.setAttribute('fill', '#ccff00'); el.setAttribute('stroke', '#444'); el.setAttribute('stroke-width', '1');
+}
 gObj.appendChild(el);
 });
 }
@@ -561,13 +583,11 @@ function sharePlanText() {
 if(blockList.length === 0) { alert("メニューがありません"); return; }
 
 const date = new Date().toLocaleDateString();
-// LINEで見やすいようにヘッダーと区切り線を追加
-let text = `🏸 練習メニュー (${date})\n`;
+let text = `🎾 練習メニュー (${date})\n`;
 text += `⏱ 合計時間: ${document.getElementById('total-time').innerText}分\n`;
-text += `------------------\n\n`; // 見やすい区切り
+text += `------------------\n\n`;
 
 blockList.forEach((b, i) => {
-// 各項目の間に空行(\n\n)を入れてスッキリさせる
 text += `■ ${i+1}. ${b.title}\n`;
 text += `   時間: ${b.time}分\n`;
 text += `   内容: ${getTypeName(b.type)}\n\n`;
@@ -597,13 +617,12 @@ img.onload = async () => {
 ctx.drawImage(img, 0, 0);
 canvas.toBlob(async (blob) => {
 if (!blob) return;
-const file = new File([blob], "badi_tactics.png", { type: "image/png" });
+const file = new File([blob], "tennis_tactics.png", { type: "image/png" });
 
-// 共有処理
 if (navigator.share) { 
 try { await navigator.share({ files: [file], title: '作戦ボード' }); } catch (err) {} 
 } else { 
-const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "badi_tactics.png"; document.body.appendChild(a); a.click(); document.body.removeChild(a); alert("画像がダウンロードされました。LINEで送信してください。"); 
+const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "tennis_tactics.png"; document.body.appendChild(a); a.click(); document.body.removeChild(a); alert("画像がダウンロードされました。LINEで送信してください。"); 
 }
 
 if(wasPresentation) togglePresentation(); // 元に戻す
@@ -615,7 +634,7 @@ if(wasPresentation) togglePresentation(); // 元に戻す
 function exportData() {
 const data = { blocks: localStorage.getItem(KEY_BLOCKS), history: localStorage.getItem(KEY_HISTORY), library: localStorage.getItem(KEY_LIBRARY) };
 const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "badi_backup.json"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "tennis_backup.json"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 function importData(input) {
 const file = input.files[0]; if(!file) return;
