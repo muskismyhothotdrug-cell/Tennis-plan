@@ -103,8 +103,8 @@ svg { width: 100%; height: 100%; }
 
 /* SVG内スタイル定義 */
 .court-base { fill: #4169e1; } /* インコートの青 */
-.court-line { stroke: white; stroke-width: 2; fill: none; }
-.net-line { stroke: #ddd; stroke-width: 3; stroke-dasharray: 4,4; }
+.court-line { stroke: white; stroke-width: 3; fill: none; }
+.net-line { stroke: #eee; stroke-width: 4; stroke-dasharray: 5,5; }
 .draw-path { stroke: #ffeb3b; stroke-width: 4; fill: none; stroke-linecap: round; opacity: 0.8; }
 .arrow-line { stroke-width: 4; fill: none; opacity: 0.9; }
 .arrow-shot { stroke: #ffeb3b; marker-end: url(#arrowhead-shot); }
@@ -539,95 +539,4 @@ animationId = setInterval(() => { state.frames.push({ t: Date.now()-state.startT
 function playRec() {
 if(!state.frames.length) return; state.playing=true; const start=Date.now(); const dur=state.frames[state.frames.length-1].t;
 function step() {
-const now=Date.now()-start; const frame=state.frames.find(f=>f.t>=now);
-if(frame) { state.objects=frame.objs; renderObjects(); document.getElementById('timer').innerText=(now/1000).toFixed(1)+"s"; }
-if(now<dur) requestAnimationFrame(step); else { state.playing=false; document.getElementById('timer').innerText="End"; }
-} step();
-}
-function stopPlay() { state.playing = false; }
-function togglePresentation() { document.body.classList.toggle('presentation-mode'); }
-
-// --- ボードデータの保存・読み込み ---
-function saveBoardData() {
-if(currentBlockIndex===-1) return;
-blockList[currentBlockIndex].boardData = { data: { objects: state.objects, drawings: state.drawings, frames: state.frames } };
-saveBlocks(); alert("保存しました");
-}
-function loadBoardData(w) {
-if(!w || !w.data) return; state.objects=w.data.objects||[]; 
-state.drawings = (w.data.drawings||[]).map(d => typeof d === 'string' ? {type:'pen', d:d} : d);
-state.frames=w.data.frames||[]; renderObjects(); renderDrawings(); document.getElementById('btn-play').style.display = state.frames.length?'inline-block':'none';
-}
-function resetBoardState() {
-state = { objects:[], drawings:[], mode:'move', isDrawing:false, recording:false, playing:false, startTime:0, frames:[] }; tempArrow = null;
-renderObjects(); renderDrawings(); document.getElementById('timer').innerText=""; document.getElementById('btn-play').style.display='none';
-}
-
-// --- LINE共有機能 (テキスト・画像) 改良版 ---
-function sharePlanText() {
-if(blockList.length === 0) { alert("メニューがありません"); return; }
-
-const date = new Date().toLocaleDateString();
-let text = `🎾 練習メニュー (${date})\n`;
-text += `⏱ 合計時間: ${document.getElementById('total-time').innerText}分\n`;
-text += `------------------\n\n`;
-
-blockList.forEach((b, i) => {
-text += `■ ${i+1}. ${b.title}\n`;
-text += `   時間: ${b.time}分\n`;
-text += `   内容: ${getTypeName(b.type)}\n\n`;
-});
-
-if (navigator.share) { navigator.share({ title: '練習メニュー', text: text }).catch(e=>{}); } 
-else { prompt("コピー用:", text); }
-}
-
-async function shareBoardImage() {
-// プレゼンモードでボタン類を隠してから画像化
-const wasPresentation = document.body.classList.contains('presentation-mode');
-if(wasPresentation) togglePresentation();
-
-const svgEl = document.getElementById('court-svg');
-const serializer = new XMLSerializer();
-let source = serializer.serializeToString(svgEl);
-source = source.replace(/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, '');
-source = '<svg xmlns="http://www.w3.org/2000/svg" ' + source.substring(4);
-
-const canvas = document.createElement('canvas'); canvas.width = 1340; canvas.height = 610;
-const ctx = canvas.getContext('2d'); 
-const img = new Image();
-img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
-
-img.onload = async () => {
-ctx.drawImage(img, 0, 0);
-canvas.toBlob(async (blob) => {
-if (!blob) return;
-const file = new File([blob], "tennis_tactics.png", { type: "image/png" });
-
-if (navigator.share) { 
-try { await navigator.share({ files: [file], title: '作戦ボード' }); } catch (err) {} 
-} else { 
-const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "tennis_tactics.png"; document.body.appendChild(a); a.click(); document.body.removeChild(a); alert("画像がダウンロードされました。LINEで送信してください。"); 
-}
-
-if(wasPresentation) togglePresentation(); // 元に戻す
-}, 'image/png');
-};
-}
-
-// --- ファイル入出力 (バックアップ) ---
-function exportData() {
-const data = { blocks: localStorage.getItem(KEY_BLOCKS), history: localStorage.getItem(KEY_HISTORY), library: localStorage.getItem(KEY_LIBRARY) };
-const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "tennis_backup.json"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
-function importData(input) {
-const file = input.files[0]; if(!file) return;
-if(!confirm("上書きしますか？")) return;
-const reader = new FileReader();
-reader.onload = e => { try { const d = JSON.parse(e.target.result); if(d.blocks) localStorage.setItem(KEY_BLOCKS, d.blocks); if(d.history) localStorage.setItem(KEY_HISTORY, d.history); if(d.library) localStorage.setItem(KEY_LIBRARY, d.library); location.reload(); } catch(err) { alert("エラー"); } };
-reader.readAsText(file);
-}
-</script>
-</body>
-</html>
+const now=Date.
